@@ -31,7 +31,7 @@ SECRET_KEY = "django-insecure-xjfe9tgnr_d#r)so+1lwx4b%2i1ib%1)bd+w@4f%l_u_4iv^&1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.11.4']
 
 
 # Application definition
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'corsheaders',
     'appfeel',
-    'channels'
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -133,17 +133,20 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#whitelist for react app
+# whitelist for react app
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
 ]
 
-#user model 
+# user model
 AUTH_USER_MODEL = 'appfeel.CustomUser'
 
-#channels 
+# channels
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

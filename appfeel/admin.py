@@ -1,10 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+from .models import CustomUser, Therapies, DoctorProfile
 from django.http import HttpResponseRedirect
 
 
+class DoctorProfileInline(admin.StackedInline):
+    model = DoctorProfile
+    can_delete = False
+
 class CustomUserAdmin(UserAdmin):
+    inlines = [DoctorProfileInline]
     list_display = ('username', 'email', 'role')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
@@ -35,28 +40,33 @@ class CustomUserAdmin(UserAdmin):
     
     def change_view(self, request, object_id, form_url='', extra_context=None):
         obj = self.get_object(request, object_id)
-        if obj and obj.role == CustomUser.ADMIN and not request.user.is_superuser:
-            self.readonly_fields = ('username', 'email', 'role', 'is_superuser', 'is_staff', 'is_active')
-        else:
-            self.readonly_fields = ()
-        return super().change_view(request, object_id, form_url, extra_context)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        obj = self.get_object(request, object_id)
-        if obj and obj.role == CustomUser.ADMIN and not request.user.is_superuser:
-            self.fields = ('password',)
-            self.readonly_fields = (
-                'username', 'email', 'role', 'is_superuser', 'is_staff', 'is_active')
-        else:
-            self.fields = '__all__'
-            self.readonly_fields = ()
+        if request.user.is_authenticated:
+            if obj and obj.role == CustomUser.ADMIN and not request.user.is_superuser:
+                self.readonly_fields = ('username', 'email', 'role', 'is_superuser', 'is_staff', 'is_active')
+            else:
+                self.readonly_fields = ()
         return super().change_view(request, object_id, form_url, extra_context)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if not request.user.is_superuser:
-            qs = qs.exclude(role=CustomUser.ADMIN)
+        if request.user.is_authenticated:
+            if not request.user.is_superuser:
+                qs = qs.exclude(role=CustomUser.ADMIN)
         return qs
+
+    def get_inline_instances(self, request, obj=None):
+        if obj and obj.role == CustomUser.DOCTOR:
+            return [DoctorProfileInline(self.model, self.admin_site)]
+        return []
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
+
+
+@admin.register(Therapies)
+class TherapiesAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(DoctorProfile)
+class TherapiesAdmin(admin.ModelAdmin):
+    pass
