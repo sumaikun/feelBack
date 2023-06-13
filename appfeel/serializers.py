@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, Message, Conversation
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +15,19 @@ class UserSerializer(serializers.ModelSerializer):
             role=validated_data['role']
         )
         return user
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ('id', 'conversation', 'user', 'content', 'created_at')
+
+class ConversationSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Conversation
+        fields = ('id', 'room_name', 'anonymous_name', 'anonymous_email', 'anonymous_phone', 'created_at', 'messages')
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

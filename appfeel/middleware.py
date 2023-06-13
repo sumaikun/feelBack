@@ -10,7 +10,6 @@ class AdminAccessMiddleware:
         # Allow users to reach the login page
         if request.path == reverse('admin:login'):
             return self.get_response(request)
-
         if request.path.startswith(reverse('admin:index')) and not request.user.is_authenticated:
             return redirect('admin:login')  # Redirect non-authenticated users to the admin login page
         if request.user.is_authenticated and not request.user.is_superuser and request.user.role != CustomUser.ADMIN:
