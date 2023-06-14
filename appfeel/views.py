@@ -1,3 +1,5 @@
+from .serializers import UserSerializer, LoginSerializer
+from .models import CustomUser
 from rest_framework import viewsets
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -6,18 +8,18 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login
 import openai
 
-#rest_framework
+# rest_framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+from rest_framework.decorators import api_view
 
 openai.api_key = OPEN_AI_KEY
 
-from .models import CustomUser
-from .serializers import UserSerializer, LoginSerializer
 
-#rest full class
+# rest full class
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -25,6 +27,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 def hello_world(request):
     return JsonResponse({'message': 'Hello, World!'})
+
 
 @csrf_exempt
 def generate_text(request):
@@ -40,7 +43,6 @@ def generate_text(request):
 
 class LoginView(APIView):
     def post(self, request):
-        print("on login request")
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data['username']
@@ -52,3 +54,19 @@ class LoginView(APIView):
             else:
                 return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def validate_token(_, token):
+    try:
+        #print("validating token", token)
+        token_obj = Token.objects.get(key=token)
+        user = token_obj.user
+
+        if user.is_active:
+            return Response({'valid': True}, status=status.HTTP_200_OK)
+        else:
+            return Response({'valid': False, 'message': 'User is not active.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    except Token.DoesNotExist:
+        return Response({'valid': False, 'message': 'Invalid token.'}, status=status.HTTP_404_NOT_FOUND)
